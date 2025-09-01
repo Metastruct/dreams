@@ -90,6 +90,16 @@ local function norm_compare(xdelta, ydelta, zdelta, xsize, ysize, zsize)
 	end
 end
 
+local function highest_mag(xdelta, ydelta, zdelta)
+	local axd = math_abs(xdelta)
+	local ayd = math_abs(ydelta)
+	local azd = math_abs(zdelta)
+	local mags = {{d = "x", axd}, {d = "y", ayd}, {d = "z", azd}}
+	table.sort(mags, function(a, b) return a[1] > b[1] end)
+	return mags[1].d, mags[2].d, mags[3].d
+end
+lib.OrderedHighestMag = highest_mag
+
 local mvec = Vector()
 local function IntersectABCylinderWithAABB(cylOrg, cylRad, cylHeight, boxmin, boxmax)
 	local xmin, ymin, zmin = v_Unpack(boxmin)
