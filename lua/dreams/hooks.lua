@@ -140,11 +140,11 @@ function Dreams.AddHooks()
 		if ply:IsDreaming() or CLIENT and LocalPlayer():IsDreaming() then return true end
 	end)
 
-	local magic_vector = Vector(-7777, -7777, -7777) -- it's magic, you knowwwow, never believe its not soooo
+	local hidden_vector = Vector(-7777, -7777, -7777)
 	hook.Add("PrePlayerDraw", "!!!dreams_DrawPlayer", function(ply, flags)
 		if ply ~= LocalPlayer() and ply:GetDreamID() ~= LocalPlayer():GetDreamID() and not ply.Dreams_FDraw then
 			if not LocalPlayer():IsDreaming() then
-				ply:SetNetworkOrigin(magic_vector) -- hide real players from people who are not dreaming
+				ply:SetNetworkOrigin(hidden_vector) -- hide real players from people who are not dreaming
 				ply:DrawShadow(false)
 			end
 			return true

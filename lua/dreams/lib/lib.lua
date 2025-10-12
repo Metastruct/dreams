@@ -367,6 +367,75 @@ function lib.RectToMeshEx(l, w, h, off, ignore, reverse, um, vm)
 	if reverse then nverts = table.Reverse(nverts) end
 	return nverts
 end
+
+-- For creating a list of faces for Dreams Phys
+function lib.RectToFaces(l, w, h, off, ignore)
+	local frt = Vector(l, w, h) + off
+	local flt = Vector(l, 0, h) + off
+	local frb = Vector(l, w, 0) + off
+	local flb = Vector(l, 0, 0) + off
+	local brt = Vector(0, w, h) + off
+	local blt = Vector(0, 0, h) + off
+	local brb = Vector(0, w, 0) + off
+	local blb = Vector(0, 0, 0) + off
+
+	local nverts = {}
+	ignore = ignore or {}
+	if not ignore[1] then
+		table.insert(nverts, {
+			normal = Vector(1, 0, 0),
+			plane = {flt},
+			-- front
+			verts = {
+				[0] = flt,
+				[1] = frt,
+				[2] = frb,
+				[3] = flb,
+			},
+		})
+	end
+	if not ignore[2] then
+		table.insert(nverts, {
+			-- right
+			normal = Vector(0, 1, 0),
+			plane = {frt},
+			verts = {
+				[0] = frt,
+				[1] = brt,
+				[2] = brb,
+				[3] = frb,
+			},
+		})
+	end
+	if not ignore[3] then
+		table.insert(nverts, {
+			-- back
+			normal = Vector(-1, 0, 0),
+			plane = {brt},
+			verts = {
+				[0] = brt,
+				[1] = blt,
+				[2] = blb,
+				[3] = brb,
+			}
+		})
+	end
+	if not ignore[4] then
+		table.insert(nverts, {
+			-- left
+			normal = Vector(0, -1, 0),
+			plane = {blt},
+			verts = {
+				[0] = blt,
+				[1] = flt,
+				[2] = flb,
+				[3] = blb,
+			}
+		})
+	end
+	return nverts
+end
+
 ---------------------
 local normal = function(c, b, a)
 	local cr = v_Cross(b - a, c - a)

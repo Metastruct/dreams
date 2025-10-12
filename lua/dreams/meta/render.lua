@@ -57,7 +57,7 @@ function DREAMS:RenderRooms(ply, drawall)
 		end
 		ply.DreamRoomCache = CurTime() + 0.1
 	end
-	
+
 	for k, v in ipairs(self.ListRooms) do
 		if not IsValid(v.CMDL) and v.CMDL ~= false then
 			v.CMDL = v.mdl and ClientsideModelSafe(v.mdl, RENDERGROUP_BOTH) or false
@@ -74,6 +74,7 @@ function DREAMS:RenderRooms(ply, drawall)
 
 		render.SuppressEngineLighting(true)
 		render.SetAmbientLight(0, 0 , 0)
+		render.SetLocalModelLights()
 		if v.Lighting then
 			render.ResetModelLighting(v.Lighting[1], v.Lighting[2], v.Lighting[3])
 		else

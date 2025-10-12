@@ -166,7 +166,7 @@ function DREAMS:DoMove(ply, mv)
 	local onfloor
 	for k, v in ipairs(self.Phys) do
 		if v.Disabled then continue end
-		if not v_WithinAABox(org, v.AA, v.BB) then continue end
+		if v.AA and v.BB and not v_WithinAABox(org, v.AA, v.BB) then continue end
 		for a, s in ipairs(v) do
 			if s.Disabled then continue end
 			local t = s.PType
