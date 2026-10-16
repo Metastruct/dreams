@@ -16,6 +16,8 @@ local cmd_KeyDown = cmdmeta.KeyDown
 local ply_GetAbsVelocity = emeta.GetAbsVelocity
 local ply_GetDTVector = emeta.GetDTVector
 local ply_SetDTVector = emeta.SetDTVector
+local ply_SetDTBool = emeta.SetDTBool
+local ply_GetDTBool = emeta.GetDTBool
 local ply_GetTable = emeta.GetTable
 
 local v_Add = vmeta.Add
@@ -39,10 +41,12 @@ local IN_MOVERIGHT = IN_MOVERIGHT
 local IN_MOVELEFT = IN_MOVELEFT
 local IN_FORWARD = IN_FORWARD
 local IN_BACK = IN_BACK
+local IN_DUCK = IN_DUCK
 
 -------------------------------------------------
 DREAMS.MoveSpeed = 20
 DREAMS.ShiftSpeed = 40
+DREAMS.DuckSpeed = 10
 DREAMS.JumpPower = 400
 DREAMS.Gravity = 600
 
@@ -71,9 +75,13 @@ function DREAMS:StartMove(ply, mv, cmd, speed, jump, grav)
 	if ply:IsBot() then cmd:AddKey(IN_FORWARD) end
 	local ang = mv_GetMoveAngles(mv)
 	local pos = Vector(0, 0, 0)
+	local ducking = cmd_KeyDown(cmd, IN_DUCK)
+	ply_SetDTBool(ply, 31, ducking)
 	if not speed then
 		speed = self.MoveSpeed
-		if cmd_KeyDown(cmd, IN_SPEED) then
+		if ducking then
+			speed = self.DuckSpeed
+		elseif cmd_KeyDown(cmd, IN_SPEED) then
 			speed = self.ShiftSpeed
 		end
 	end
@@ -89,7 +97,7 @@ function DREAMS:StartMove(ply, mv, cmd, speed, jump, grav)
 
 	ply.DREAMS_TempJumpPower = jump
 
-	if ply.DREAMS_onfloor then v_SetUnpacked(vel, vel.x, vel.y, math.Clamp(vel.z, -3, 3))
+	if not ply_GetDTBool(ply, 30) then v_SetUnpacked(vel, vel.x, vel.y, math.Clamp(vel.z, -3, 3))
 	elseif vel.z < 0 then v_SetUnpacked(vel, vel.x, vel.y, math_max(math_min(vel.z, -1) * 1.111, -1400)) end
 	v_Add(vel, Vector(0, 0, -(grav or self.Gravity) * FrameTime()))
 	mv_SetVelocity(mv, vel)
@@ -164,6 +172,8 @@ function DREAMS:DoMove(ply, mv)
 	local org = morg + vel * FrameTime()
 	local ptbl = ply_GetTable(ply)
 	local onfloor
+	local wasfloor = not ply_GetDTBool(ply, 30)
+	local didjump = ply_GetDTBool(ply, 29)
 	for k, v in ipairs(self.Phys) do
 		if v.Disabled then continue end
 		if v.AA and v.BB and not v_WithinAABox(org, v.AA, v.BB) then continue end
@@ -200,39 +210,46 @@ function DREAMS:DoMove(ply, mv)
 			end
 
 			if res then
+				local land = false
 				if v_IsEqualTol(norm, vector_up, 0.5) then
 					if SERVER and vel.z < -100 then
 						self:TakeFallDamage(ply, math.abs(vel.z))
 					end
 					onfloor = true
+					land = t == DREAMSC_AABB and morg.z >= s.BB.z
 				else
-					ptbl.DREAMS_onfloor = false
+					wasfloor = false
 				end
-				if hit then vel = vel + hit * 32 end
+				if hit and not land then vel = vel + hit * 32 end
 				vel = vel + norm * math_max(0, v_Dot(vel, -norm))
 				vel = clear_axes(vel, norm)
+				if land then
+					morg = Vector(morg.x, morg.y, s.BB.z)
+					org = morg + vel * FrameTime()
+				end
 			end
 		end
 		ptbl.DreamRoom = v.Room
 	end
 
 	if mv:KeyDown(IN_JUMP) then
-		if onfloor and not ptbl.DREAMS_didjump then
+		if onfloor and not didjump then
 			v_SetUnpacked(vel, vel.x, vel.y, ptbl.DREAMS_TempJumpPower or self.JumpPower)
-			ptbl.DREAMS_onfloor = false
+			wasfloor = false
 			ptbl.DREAMS_TempJumpPower = nil
 			onfloor = false
-			ptbl.DREAMS_didjump = true
+			didjump = true
 		end
-	elseif onfloor and ptbl.DREAMS_didjump then
-		ptbl.DREAMS_didjump = false
+	elseif onfloor and didjump then
+		didjump = false
 	end
 
-	if not onfloor and ptbl.DREAMS_onfloor then
+	if not onfloor and wasfloor then
 		vel = vel - Vector(0, 0, 40)
 		morg = morg - Vector(0, 0, 0.1)
 	end
-	ptbl.DREAMS_onfloor = onfloor
+	ply_SetDTBool(ply, 29, didjump)
+	ply_SetDTBool(ply, 30, not onfloor)
 
 	ply_SetDTVector(ply, 31, morg + vel * FrameTime())
 	mv_SetVelocity(mv, vel)

@@ -120,6 +120,11 @@ function DREAMS:RenderPlayers(ply, drawall)
 
 		if not pk_pills or pk_pills and not pk_pills.getMappedEnt(v) then
 			v:DrawModel()
+			if pac and pac.RenderOverride and v.pac_is_drawing then
+				pac.RenderOverride(v, "update_legacy_bones")
+				pac.RenderOverride(v, "opaque")
+				pac.RenderOverride(v, "translucent")
+			end
 		else
 			local ent = pk_pills.getMappedEnt(v)
 			if ent.GetPuppet and IsValid(ent:GetPuppet()) then
@@ -246,10 +251,13 @@ end
 function DREAMS:SetupFog()
 end
 
+DREAMS.DuckDrop = 36
+
 local height = Vector(0, 0, 64)
 function DREAMS:CalcView(ply, view)
+	self.DuckOffset = Lerp(math.min(FrameTime() * 10, 1), self.DuckOffset or 0, ply:IsDreamDucking() and self.DuckDrop or 0)
 	view.angles = ply:EyeAngles()
-	view.origin = ply:GetDTVector(31) + height
+	view.origin = ply:GetDTVector(31) + height - Vector(0, 0, self.DuckOffset)
 end
 
 function DREAMS:RenderScene(ply, rt)
@@ -265,6 +273,7 @@ function DREAMS:RenderScene(ply, rt)
 	cam.End3D()
 
 	if rt then return true end
+	render.FogMode(MATERIAL_FOG_NONE)
 	cam.Start2D()
 	self:DrawHUD(ply, ScrW(), ScrH())
 	cam.End2D()
@@ -277,7 +286,11 @@ function DREAMS:CalcMainActivity(ply, velocity)
 	plyTable.CalcSeqOverride = -1
 
 	local len2d = velocity:Length2DSqr()
-	if ( len2d > 22500 ) then plyTable.CalcIdeal = ACT_MP_RUN elseif ( len2d > 0.25 ) then plyTable.CalcIdeal = ACT_MP_WALK end
+	if not ply:IsDreamOnGround() then
+		plyTable.CalcIdeal = ACT_MP_JUMP
+	elseif ply:IsDreamDucking() then
+		plyTable.CalcIdeal = len2d > 0.25 and ACT_MP_CROUCHWALK or ACT_MP_CROUCH_IDLE
+	elseif ( len2d > 22500 ) then plyTable.CalcIdeal = ACT_MP_RUN elseif ( len2d > 0.25 ) then plyTable.CalcIdeal = ACT_MP_WALK end
 
 	return plyTable.CalcIdeal, plyTable.CalcSeqOverride
 end

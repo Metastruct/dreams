@@ -28,6 +28,14 @@ function Dreams.AddHooks()
 			if not dream.CalcMainActivity then return end
 			return dream:CalcMainActivity(ply, velocity)
 		end)
+
+		hook.Add("HUDDrawTargetID", "!!!dreams_TargetID", function()
+			local ply = LocalPlayer()
+			if not ply.IsDreaming then return end
+			if ply:IsDreaming() then return false end
+			local ent = ply:GetEyeTrace().Entity
+			if IsValid(ent) and ent:IsPlayer() and ent:IsDreaming() then return false end
+		end)
 	end
 
 	if SERVER then
@@ -182,6 +190,8 @@ function Dreams.RemoveHooks()
 	hook.Remove("RenderScene", "!!dreams_RenderDreams")
 	hook.Remove("HUDShouldDraw", "!!dreams_ShouldDrawHud")
 	hook.Remove("EntityEmitSound", "!!!!dreams_EmitSound")
+	hook.Remove("CalcMainActivity", "!!!dreams_calcmain_override")
+	hook.Remove("HUDDrawTargetID", "!!!dreams_TargetID")
 	hook.Remove("InitPostEntity", "!!!dreams_init")
 	hook.Remove("EntityTakeDamage", "!!!!dreams_TakeDamage")
 	hook.Remove("PrePlayerDraw", "!!!dreams_DrawPlayer")
@@ -192,6 +202,7 @@ function Dreams.RemoveHooks()
 	hook.Remove("PlayerSwitchWeapon", "!!!dreams_SwitchWeapon")
 	hook.Remove("FinishMove", "!!!dreams_finishmove")
 	hook.Remove("Move", "!!!dreams_domove")
+	hook.Remove("VehicleMove", "!!!dreams_domove")
 	hook.Remove("SetupMove", "!!!dreams_setupmove")
 	hook.Remove("Think", "!!!dreams_Think")
 

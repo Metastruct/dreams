@@ -31,6 +31,8 @@ local ply_GetDTVector = emeta.GetDTVector
 local ply_SetDTVector = emeta.SetDTVector
 local ply_SetDTInt = emeta.SetDTInt
 local ply_GetDTInt = emeta.GetDTInt
+local ply_GetDTBool = emeta.GetDTBool
+local ply_SetDTBool = emeta.SetDTBool
 
 local Vector = Vector
 local Angle = Angle
@@ -55,6 +57,14 @@ end
 
 function pmeta:GetDreamPos()
 	return ply_GetDTVector(self, 31)
+end
+
+function pmeta:IsDreamDucking()
+	return ply_GetDTBool(self, 31)
+end
+
+function pmeta:IsDreamOnGround()
+	return not ply_GetDTBool(self, 30)
 end
 
 emeta.O_IsOnGround = emeta.O_IsOnGround or emeta.IsOnGround
@@ -86,6 +96,9 @@ if SERVER then
 		if self:GetDreamID() == id then return end
 		self:SetNoTarget(false)
 		self:SetDreamPos(vector_origin)
+		ply_SetDTBool(self, 29, false)
+		ply_SetDTBool(self, 30, false)
+		ply_SetDTBool(self, 31, false)
 
 		local cdream = self:GetDream()
 		if cdream then
