@@ -2,6 +2,7 @@ function Dreams.AddHooks()
 	if CLIENT then
 		hook.Add("RenderScene", "!!dreams_RenderDreams", function(origin, angles, fov)
 			local ply = LocalPlayer()
+			if not IsValid(ply) then return end
 			if not ply.IsDreaming or not ply:IsDreaming() then return end
 			ply.DreamRoom = ply.DreamRoom or Dreams.EMPTY_ROOM
 			local dream = ply:GetDream()
@@ -10,6 +11,7 @@ function Dreams.AddHooks()
 
 		hook.Add("HUDShouldDraw", "!!dreams_ShouldDrawHud", function(str)
 			local ply = LocalPlayer()
+			if not IsValid(ply) then return end
 			if not ply.IsDreaming or not ply:IsDreaming() then return end
 			local dream = ply:GetDream()
 			return dream:HUDShouldDraw(ply, str)
@@ -17,6 +19,7 @@ function Dreams.AddHooks()
 
 		hook.Add("EntityEmitSound", "!!!!dreams_EmitSound", function(tbl)
 			local ply = LocalPlayer()
+			if not IsValid(ply) then return end
 			if not ply.IsDreaming or not ply:IsDreaming() then return end
 			local dream = ply:GetDream()
 			return dream:EntityEmitSound(tbl)
@@ -31,6 +34,7 @@ function Dreams.AddHooks()
 
 		hook.Add("HUDDrawTargetID", "!!!dreams_TargetID", function()
 			local ply = LocalPlayer()
+			if not IsValid(ply) then return end
 			if not ply.IsDreaming then return end
 			if ply:IsDreaming() then return false end
 			local ent = ply:GetEyeTrace().Entity
